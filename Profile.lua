@@ -217,6 +217,7 @@ function MOD:SetCooldownDefaults()
 	table.wipe(cpet) -- pet cooldown spells should be reset each time the tables are rebuilt
 	table.wipe(cls) -- lockout spells should be completely reset each time the tables are rebuilt
 	table.wipe(bst) -- table of all spell names and ids in spell book (player and profession only)
+	table.wipe(MOD.spellOverrides) -- table of all overridden spells
 
 	-- Only remove special spells which show up dynamically in player's cooldown spells
 	if MOD.myClass == "HUNTER" then
@@ -234,67 +235,72 @@ function MOD:SetCooldownDefaults()
 	openTabs = SHIM:GetNumSpellTabs()
 
 	for tab = 1, openTabs do -- scan first two tabs of player spell book (general and current spec) for player spells on cooldown
-		local spellLine, spellIcon, offset, numSpells = SHIM:GetSpellTabInfo(tab)
-		for i = 1, numSpells do
-			local index = i + offset
-			local spellName = SHIM:GetSpellBookItemName(index, book)
-			if not spellName then
-				break
-			end
+        local spellLine, spellIcon, offset, numSpells = SHIM:GetSpellTabInfo(tab)
+        for i = 1, numSpells do
+            local index = i + offset
+            local spellName = SHIM:GetSpellBookItemName(index, book)
+            if not spellName then
+                break
+            end
 
-			local stype, id, isPassive = SHIM:GetSpellBookItemInfo(index, book)
-			if id then -- Only index valid spells
-				if stype == "SPELL" then -- in this case, id is not always the spell id despite what online docs say
-					local name, _, icon, _, _, _, spellID = SHIM:GetSpellInfo(id)
-					if name and name ~= "" and icon and spellID and not isPassive then -- don't index passive spells as they have no cooldown
-						bst[name] = spellID
-						iconCache[name] = icon
-						local _, charges = SHIM:GetSpellCharges(index, book)
+            local stype, id, isPassive, overrideID = SHIM:GetSpellBookItemInfo(index, book)
+            if id then -- Only index valid spells
+                if stype == "SPELL" then -- in this case, id is not always the spell id despite what online docs say
+                    local name, _, icon, _, _, _, spellID = SHIM:GetSpellInfo(id)
+                    if overrideID ~= nil then
+                        overridingName, _, overridingIcon, _, _, _, overrideID = SHIM:GetSpellInfo(overrideID)
+                        MOD.spellOverrides[name] = overridingName
+                        bst[overridingName] = overrideID
+                    end
 
-						if charges and charges > 0 then
-							chs[spellID] = charges
-						else
-							local duration = GetSpellBaseCooldown(spellID) -- duration is in milliseconds
+                    if name and name ~= "" and icon and spellID and not isPassive then -- don't index passive spells as they have no cooldown
+                        bst[name] = overrideID or spellID
+                        iconCache[name] = icon
+                        local _, charges = SHIM:GetSpellCharges(index, book)
 
-							if duration and duration > 1500 then
-								cds[spellID] = duration / 1000
-							end -- don't include spells with global cooldowns
-						end
-						local ls = cls[name] -- doesn't account for "FLYOUT" spellbook entries, but not an issue currently
-						if ls then -- found a lockout spell so add fields for the spell book index plus localized text
-							ls.index = index
-							if ls.school == "Frost" then ls.label = L["Frost School"]; ls.text = L["Locked out of Frost school of magic."]
-							elseif ls.school == "Fire" then ls.label = L["Fire School"]; ls.text = L["Locked out of Fire school of magic."]
-							elseif ls.school == "Nature" then ls.label = L["Nature School"]; ls.text = L["Locked out of Nature school of magic."]
-							elseif ls.school == "Shadow" then ls.label = L["Shadow School"]; ls.text = L["Locked out of Shadow school of magic."]
-							elseif ls.school == "Arcane" then ls.label = L["Arcane School"]; ls.text = L["Locked out of Arcane school of magic."]
-							elseif ls.school == "Holy" then ls.label = L["Holy School"]; ls.text = L["Locked out of Holy school of magic."]
-							elseif ls.school == "Physical" then ls.label = L["Physical School"]; ls.text = L["Locked out of Physical school of magic."]
-							end
-						end
-					end
-				elseif stype == "FLYOUT" then -- in this case, id is flyout id
-					local _, _, numSlots, known = GetFlyoutInfo(id)
-					if known then
-						for slot = 1, numSlots do
-							local spellID, _, _, name = GetFlyoutSlotInfo(id, slot)
-							if spellID then
-								local name, _, icon = SHIM:GetSpellInfo(spellID)
-								if name and name ~= "" and icon then -- make sure we have a valid spell
-									bst[name] = spellID
-									iconCache[name] = icon
-									local duration = GetSpellBaseCooldown(spellID) -- duration is in milliseconds
-									if duration and duration > 1500 then -- don't include spells with global cooldowns
-										cds[spellID] = duration / 1000
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
+                        if charges and charges > 0 then
+                            chs[overrideID or spellID] = charges
+                        else
+                            local duration = GetSpellBaseCooldown(overrideID or spellID) -- duration is in milliseconds
+                            if duration and duration > 1500 then
+                                cds[overrideID or spellID] = duration / 1000
+                            end -- don't include spells with global cooldowns
+                        end
+                        local ls = cls[name] -- doesn't account for "FLYOUT" spellbook entries, but not an issue currently
+                        if ls then -- found a lockout spell so add fields for the spell book index plus localized text
+                            ls.index = index
+                            if ls.school == "Frost" then ls.label = L["Frost School"]; ls.text = L["Locked out of Frost school of magic."]
+                            elseif ls.school == "Fire" then ls.label = L["Fire School"]; ls.text = L["Locked out of Fire school of magic."]
+                            elseif ls.school == "Nature" then ls.label = L["Nature School"]; ls.text = L["Locked out of Nature school of magic."]
+                            elseif ls.school == "Shadow" then ls.label = L["Shadow School"]; ls.text = L["Locked out of Shadow school of magic."]
+                            elseif ls.school == "Arcane" then ls.label = L["Arcane School"]; ls.text = L["Locked out of Arcane school of magic."]
+                            elseif ls.school == "Holy" then ls.label = L["Holy School"]; ls.text = L["Locked out of Holy school of magic."]
+                            elseif ls.school == "Physical" then ls.label = L["Physical School"]; ls.text = L["Locked out of Physical school of magic."]
+                            end
+                        end
+                    end
+                elseif stype == "FLYOUT" then -- in this case, id is flyout id
+                    local _, _, numSlots, known = GetFlyoutInfo(id)
+                    if known then
+                        for slot = 1, numSlots do
+                            local spellID, _, _, name = GetFlyoutSlotInfo(id, slot)
+                            if spellID then
+                                local name, _, icon = SHIM:GetSpellInfo(spellID)
+                                if name and name ~= "" and icon then -- make sure we have a valid spell
+                                    bst[name] = spellID
+                                    iconCache[name] = icon
+                                    local duration = GetSpellBaseCooldown(spellID) -- duration is in milliseconds
+                                    if duration and duration > 1500 then -- don't include spells with global cooldowns
+                                        cds[spellID] = duration / 1000
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 
 	local tabs = SHIM:GetNumSpellTabs()
 	if tabs and tabs > 3 then
@@ -373,20 +379,10 @@ function MOD:SetCooldownDefaults()
 		-- Power Word: Shield
 		MOD:RegisterCooldownDefault(17, 10)
 	end
-	if MOD.myClass == "WARRIOR" then
-		-- Some warrior cooldowns miss a base cooldown but can gain one through talents or specializations.
-
-		-- Slam gains a cooldown through a talent.
-		-- Also see: https://github.com/Dicebar/Raven/issues/29
-		MOD:RegisterCooldownDefault(1464, 12)
-
-		-- Whirlwind gains a cooldown through a talent.
-		-- Also see: https://github.com/Dicebar/Raven/issues/36
-		MOD:RegisterCooldownDefault(1680, 14)
-
-		-- Ignore pain gains a cooldown when not playing as protection.
-		-- Also see: https://github.com/Dicebar/Raven/issues/39
-		MOD:RegisterCooldownDefault(190456, 11)
+	if MOD.myClass == "PALADIN" then
+		-- Flash of Light can gain a cooldown through the Light's Celerity talent:
+		-- https://www.wowhead.com/spell=403698/lights-celerity
+		MOD:RegisterCooldownDefault(19750, 6)
 	end
 
 	iconCache[L["GCD"]] = SHIM:GetSpellTexture(61304) -- cache special spell with GCD cooldown, must be valid
