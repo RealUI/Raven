@@ -24,7 +24,7 @@ function SHIM:GetCoinTextureString(amount)
 		return C_CurrencyInfo.GetCoinTextureString(amount)
 	end
 
-	return GetCoinTextureString(amount)
+    return C_Item.GetCoinTextureString(amount)
 end
 
 -- C_Item
@@ -40,7 +40,7 @@ function SHIM:GetItemCooldown(item)
 	end
 
 	-- Wrath
-	return GetItemCooldown(item)
+	return C_Item.GetItemCooldown(item)
 end
 
 function SHIM:GetItemCount(item, includeBank, includeCharges)
@@ -48,7 +48,7 @@ function SHIM:GetItemCount(item, includeBank, includeCharges)
 		return C_Item.GetItemCount(item, includeBank, includeCharges)
 	end
 
-	return GetItemCount(item, includeBank, includeCharges)
+	return C_Item.GetItemCount(item, includeBank, includeCharges)
 end
 
 function SHIM:GetItemIconByID(itemID)
@@ -56,7 +56,7 @@ function SHIM:GetItemIconByID(itemID)
 		return C_Item.GetItemIconByID(itemID)
 	end
 
-	return GetItemIcon(itemID)
+	return C_Item.GetItemIcon(itemID)
 end
 
 function SHIM:GetItemInfo(itemID)
@@ -72,7 +72,7 @@ function SHIM:GetItemSpell(itemID)
 		return C_Item.GetItemSpell(itemID)
 	end
 
-	return GetItemSpell(itemID)
+	return C_Item.GetItemSpell(itemID)
 end
 
 function SHIM:IsUsableItem(item)
@@ -80,7 +80,7 @@ function SHIM:IsUsableItem(item)
 		return C_Item.IsUsableItem(item)
 	end
 
-	return IsUsableItem(item)
+	return C_Item.IsUsableItem(item)
 end
 
 function SHIM:GetSpellInfo(spellID)
