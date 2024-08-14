@@ -180,12 +180,12 @@ function SHIM:GetSpellBookItemInfo(index, bookType)
         return itemType, spellID, info.isPassive, spellOverrideID
     end
 
-    local itemType, spellID = GetSpellBookItemInfo(index, bookType)
+    local itemType, spellID = C_SpellBook.GetSpellBookItemInfo(index, bookType)
     if itemType == "PETACTION" then
         spellID = bit.band(0xFFFFFF, spellID)
     end
 
-    return itemType, spellID, IsPassiveSpell(spellID)
+    return itemType, spellID, C_SpellBook.IsPassiveSpell(spellID)
 end
 
 function SHIM:HasPetSpells()
@@ -197,7 +197,7 @@ function SHIM:HasPetSpells()
 end
 
 function SHIM:GetSpellTexture(spellID)
-    if _G.GetSpellTexture == nil then
+    if C_Spell.GetSpellTexture == nil then
         local info = C_Spell.GetSpellInfo(spellID)
 
         if info == nil then
@@ -207,7 +207,7 @@ function SHIM:GetSpellTexture(spellID)
         return info.iconID
     end
 
-    return GetSpellTexture(spellID)
+    return C_Spell.GetSpellTexture(spellID)
 end
 
 function SHIM:GetSpellCooldown(spellID)
@@ -233,12 +233,12 @@ function SHIM:GetSpellCooldown(spellID)
 end
 
 function SHIM:GetSpellBookItemCooldown(index, spellBank)
-    if _G.C_Spell.GetSpellBookItemCooldown ~= nil then
+    if _G.C_SpellBook.GetSpellBookItemCooldown ~= nil then
         if (spellBank == "spell") then
             spellBank = Enum.SpellBookSpellBank.Player
         end
 
-        local info = C_Spell.GetSpellBookItemCooldown(index, spellBank)
+        local info = C_SpellBook.GetSpellBookItemCooldown(index, spellBank)
 
         if info == nil then
             return nil
