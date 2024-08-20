@@ -234,7 +234,7 @@ end
 
 function SHIM:GetSpellBookItemCooldown(index, spellBank)
     if _G.C_SpellBook.GetSpellBookItemCooldown ~= nil then
-        if (spellBank == "spell") then
+        if spellBank == "spell" then
             spellBank = Enum.SpellBookSpellBank.Player
         end
 
