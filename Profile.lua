@@ -1417,6 +1417,14 @@ function MOD:InitializeMedia(media)
 	media:Register(mt, "Raven White8x8", [[Interface\BUTTONS\WHITE8X8.blp]])
 end
 
+local DebuffTypeColor = { };
+DebuffTypeColor["none"]	= { r = 0.80, g = 0, b = 0 };
+DebuffTypeColor["Magic"]	= { r = 0.20, g = 0.60, b = 1.00 };
+DebuffTypeColor["Curse"]	= { r = 0.60, g = 0.00, b = 1.00 };
+DebuffTypeColor["Disease"]	= { r = 0.60, g = 0.40, b = 0 };
+DebuffTypeColor["Poison"]	= { r = 0.00, g = 0.60, b = 0 };
+DebuffTypeColor[""]	= DebuffTypeColor["none"];
+
 -- Default profile description used to initialize the SavedVariables persistent database
 MOD.DefaultProfile = {
 	global = {
